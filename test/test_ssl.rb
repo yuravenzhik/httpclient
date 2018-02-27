@@ -253,6 +253,33 @@ end
     end
   end
 
+  def test_load_cacerts
+    # disables loading default openssl paths
+    stub_x509_const(:DEFAULT_CERT_FILE, '/invalid') do
+      assert_raise(OpenSSL::SSL::SSLError) do
+        @client.get(@url)
+      end
+
+      setup_client
+
+      escape_env do
+        ENV['SSL_CERT_FILE'] = File.join(DIR, 'ca-chain.pem')
+        @client.get(@url)
+      end
+    end
+  end
+
+  def test_default_paths
+    assert_raise(OpenSSL::SSL::SSLError) do
+      @client.get(@url)
+    end
+    escape_env do
+      ENV['SSL_CERT_FILE'] = File.join(DIR, 'ca-chain.pem')
+      setup_client
+      @client.get(@url)
+    end
+  end
+
   def test_no_sslv3
     omit('TODO: SSLv3 is not supported in many environments. re-enable when disable TLSv1')
     teardown_server
@@ -391,6 +418,20 @@ end
   end
 
 private
+
+  def stub_x509_const(name, value)
+    OpenSSL::X509.module_eval do
+      begin
+        original = remove_const(name)
+        const_set(name, value)
+
+        yield
+      ensure
+        remove_const(name)
+        const_set(name, original)
+      end
+    end
+  end
 
   def cert(filename)
     OpenSSL::X509::Certificate.new(File.read(File.join(DIR, filename)))
