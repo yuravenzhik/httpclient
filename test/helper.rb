@@ -1,4 +1,12 @@
 # -*- encoding: utf-8 -*-
+begin
+  require 'simplecov'
+  require 'simplecov-rcov'
+  SimpleCov.formatter = SimpleCov::Formatter::RcovFormatter
+  SimpleCov.start
+rescue LoadError
+end if ENV['CI']
+
 require 'test/unit'
 
 require 'httpclient'
