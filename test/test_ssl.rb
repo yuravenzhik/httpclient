@@ -254,6 +254,8 @@ end
   end
 
   def test_load_cacerts
+    omit_if(RUBY_ENGINE == 'jruby', 'SSL_CERT_FILE environment does not work on JRuby')
+
     # disables loading default openssl paths
     stub_x509_const(:DEFAULT_CERT_FILE, '/invalid') do
       assert_raise(OpenSSL::SSL::SSLError) do
